@@ -118,8 +118,12 @@ struct {
 
 }static menuitems[] = {
         { "Set FAN to AUTO", G_CALLBACK(ui_command_set_fan), 0, AUTO, NULL },
+
         { "", NULL, 0L, NA, NULL },
-        { "Set FAN to  30%", G_CALLBACK(ui_command_set_fan), 30, MANUAL, NULL },
+
+        { "Set FAN to  10%", G_CALLBACK(ui_command_set_fan), 10, MANUAL, NULL },
+        { "Set FAN to  20%", G_CALLBACK(ui_command_set_fan), 20, MANUAL, NULL },
+   { "Set FAN to  30%", G_CALLBACK(ui_command_set_fan), 30, MANUAL, NULL },
         { "Set FAN to  40%", G_CALLBACK(ui_command_set_fan), 40, MANUAL, NULL },
         { "Set FAN to  50%", G_CALLBACK(ui_command_set_fan), 50, MANUAL, NULL },
         { "Set FAN to  60%", G_CALLBACK(ui_command_set_fan), 60, MANUAL, NULL },
@@ -232,7 +236,7 @@ DO NOT MANIPULATE OR QUERY EC I/O PORTS WHILE THIS PROGRAM IS RUNNING.\n\
             return main_dump_fan();
         } else {
             int val = atoi(argv[1]);
-            if (val < 30 || val > 100)
+            if (val < 10 || val > 100)
                     {
                 printf("invalid fan duty %d!\n", val);
                 return EXIT_FAILURE;
@@ -396,7 +400,7 @@ static gboolean ui_update(gpointer user_data) {
     char icon_name[256];
     double load = ((double) share_info->fan_rpms) / MAX_FAN_RPM * 100.0;
     double load_r = round(load / 5.0) * 5.0;
-    sprintf(icon_name, "brasero-disc-%02d", (int) load_r);
+   sprintf(icon_name, "fan.png", (int) load_r);
     app_indicator_set_icon(indicator, icon_name);
     return G_SOURCE_CONTINUE;
 }
@@ -476,7 +480,12 @@ static int ec_auto_duty_adjust(void) {
     //
     if (temp <= 45 && duty > 30)
         return 30;
-    //if (temp <= 25 && duty > 40)
+
+    if (temp <= 30 && duty > 30)
+        return 10;
+
+    
+//if (temp <= 25 && duty > 40)
     //    return 40;
     //if (temp <= 35 && duty > 50)
     //    return 50;
@@ -552,7 +561,7 @@ static int ec_query_fan_rpms(void) {
 }
 
 static int ec_write_fan_duty(int duty_percentage) {
-    if (duty_percentage < 30 || duty_percentage > 100) {
+    if (duty_percentage < 10 || duty_percentage > 100) {
         printf("Wrong fan duty to write: %d\n", duty_percentage);
         return EXIT_FAILURE;
     }
@@ -606,7 +615,7 @@ static int ec_io_do(const uint32_t cmd, const uint32_t port,
 }
 
 static int calculate_fan_duty(int raw_duty) {
-    return (int) ((double) raw_duty / 255.0 * 100.0);
+    return (int) ((double) raw_duty / 255.0 * 100.0)+1;
 }
 
 static int calculate_fan_rpms(int raw_rpm_high, int raw_rpm_low) {
